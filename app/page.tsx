@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import ProjectsSection from "@/components/ProjectsSection";
 
-import { PlusCircle, MinusCircle, User, Briefcase, Image, FileText, Link, GraduationCap, Github, Linkedin, Twitter, Instagram } from "lucide-react";
+import { PlusCircle, MinusCircle, User, Briefcase, Image, FileText, Link, GraduationCap, Github, Linkedin, Twitter, Instagram , Mail} from "lucide-react";
 
 export default function PortfolioForm() {
   const [skills, setSkills] = useState(['']);
@@ -18,6 +18,61 @@ export default function PortfolioForm() {
     grade: ''
   }]);
 
+  const [projects, setProjects] = useState([{
+      title: '',
+      description: '',
+      imageUrl: '',
+      github: '', 
+      technologies: ['']
+  }]); 
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [resumePdf, setResumePdf] = useState<string | null>(null);
+
+  const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result as string); // Store in state temporarily
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleResumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setResumePdf(reader.result as string); // Store in state temporarily
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+    
+  const addProject = () => {
+    setProjects([...projects, { title: "", description: "", github: "", imageUrl: "" , technologies: ['']}]);
+  };
+  
+  const removeProject = (index: number) => {
+    setProjects(projects.filter((_, i) => i !== index));
+  };
+    
+  const addTechnology = (projectIndex: number) => {
+    const newProjects = [...projects];
+    newProjects[projectIndex].technologies.push('');
+    setProjects(newProjects);
+  };
+    
+  const removeTechnology = (projectIndex: number, techIndex: number) => {
+    const newProjects = [...projects];
+    newProjects[projectIndex].technologies = newProjects[projectIndex].technologies.filter(
+      (_, i) => i !== techIndex
+    );
+    setProjects(newProjects);
+  };
+  
   const addSkill = () => {
     setSkills([...skills, '']);
   };
@@ -41,13 +96,32 @@ export default function PortfolioForm() {
     setEducation(newEducation);
   };
 
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // console.log("skills : " , skills)
+    console.log("education : " , education)
+    console.log("projects : " , projects)
     const formData = new FormData(e.target as HTMLFormElement);
-    const data = Object.fromEntries(formData);
-    console.log(data);
-  };
+    const data: any = Object.fromEntries(formData);
+    console.log("data from HTml : " ,data)
 
+    console.log("image :" , profileImage)
+    console.log("resume : ", resumePdf)
+    // Convert skills, education, and projects into arrays properly
+    data.skills = formData.getAll("skills").filter(Boolean); // Remove empty values
+    data.education = education;
+    data.projects = projects;
+    data.profileImage = profileImage;
+    data.resumeUrl = resumePdf;
+    // console.log(data.skills)
+    // console.log(data.education)
+    // console.log(data.projects)
+
+    console.log("Before Storing:", data); // Debugging
+
+    localStorage.setItem("portfolioData", JSON.stringify(data));
+};
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
       <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -125,7 +199,7 @@ export default function PortfolioForm() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="profileImage" className="text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <Image className="w-4 h-4" />
@@ -156,6 +230,57 @@ export default function PortfolioForm() {
                     placeholder="Link to your resume"
                     className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                     required 
+                  />
+                </div> */} 
+
+                <div className="space-y-2">
+                  <Label htmlFor="profileImage" className="text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <Image className="w-4 h-4" />
+                      Profile Image
+                    </div>
+                  </Label>
+                  <Input
+                    id="profileImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfileImageChange}
+                    className="cursor-pointer transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="resume" className="text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Upload Resume (PDF)
+                    </div>
+                  </Label>
+                  <Input
+                    id="resume"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleResumeChange}
+                    className="cursor-pointer transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Email Address
+                    </div>
+                  </Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                    required
                   />
                 </div>
               </div>
@@ -203,7 +328,7 @@ export default function PortfolioForm() {
                 {skills.map((skill, index) => (
                   <div key={index} className="flex gap-2 items-center">
                     <Input
-                      name={`skills[${index}]`}
+                      name="skills"
                       placeholder="Enter a skill"
                       value={skill}
                       onChange={(e) => {
@@ -344,9 +469,184 @@ export default function PortfolioForm() {
                 ))}
               </div>
             </div>
+
+            {/* Project Section  */}
+          
             <div className="project">
-              <ProjectsSection/>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between pb-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary" />
+                    <h2 className="text-2xl font-semibold">Projects</h2>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addProject}
+                    className="transition-all duration-200 hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <PlusCircle className="w-4 h-4 mr-2" />
+                    Add Project
+                  </Button>
+                </div>
+
+                <div className="space-y-6">
+                  {projects.map((project, index) => (
+                    <div
+                      key={index}
+                      className="p-6 border rounded-xl bg-card/50 space-y-6 transition-all duration-200 hover:shadow-md"
+                    >
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-medium flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Project #{index + 1}
+                        </h3>
+                        {projects.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => removeProject(index)}
+                            className="transition-all duration-200 hover:bg-destructive hover:text-destructive-foreground"
+                          >
+                            <MinusCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="grid sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor={`projects[${index}].title`} className="text-sm font-medium">
+                            Project Title
+                          </Label>
+                          <Input
+                            name={`projects[${index}].title`}
+                            placeholder="Project name"
+                            value={project.title}
+                            onChange={(e) => {
+                              const newProjects = [...projects];
+                              newProjects[index].title = e.target.value;
+                              setProjects(newProjects);
+                            }}
+                            className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`projects[${index}].github`} className="text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <Link className="w-4 h-4" />
+                              GitHub Link
+                            </div>
+                          </Label>
+                          <Input
+                            name={`projects[${index}].github`}
+                            type="url"
+                            placeholder="GitHub repository URL"
+                            value={project.github}
+                            onChange={(e) => {
+                              const newProjects = [...projects];
+                              newProjects[index].github = e.target.value;
+                              setProjects(newProjects);
+                            }}
+                            className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                            required
+                          />
+                        </div>
+
+                        <div className="col-span-2 space-y-2">
+                          <Label htmlFor={`projects[${index}].description`} className="text-sm font-medium">
+                            Project Description
+                          </Label>
+                          <Textarea
+                            name={`projects[${index}].description`}
+                            placeholder="Brief description of your project"
+                            value={project.description}
+                            onChange={(e) => {
+                              const newProjects = [...projects];
+                              newProjects[index].description = e.target.value;
+                              setProjects(newProjects);
+                            }}
+                            className="min-h-[100px] transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                            required
+                          />
+                        </div>
+
+                        {/* <div className="col-span-2 space-y-2">
+                          <Label htmlFor={`projects[${index}].image`} className="text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <Image className="w-4 h-4" />
+                              Project Image URL (Optional)
+                            </div>
+                          </Label>
+                          <Input
+                            name={`projects[${index}].image`}
+                            type="url"
+                            placeholder="https://your-project-image.com"
+                            value={project.imageUrl}
+                            onChange={(e) => {
+                              const newProjects = [...projects];
+                              newProjects[index].imageUrl = e.target.value;
+                              setProjects(newProjects);
+                            }}
+                            className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                          />
+                        </div> */}
+                      </div>
+
+                      {/* Technologies Used Section */}
+                      <div className="col-span-2 space-y-2">
+                        <Label className="text-sm font-medium">Technologies Used</Label>
+                        <div className="space-y-2">
+                          {project.technologies.map((tech, techIndex) => (
+                            <div key={techIndex} className="flex items-center gap-2">
+                              <Input
+                                name={`projects[${index}].technologies[${techIndex}]`}
+                                placeholder="Enter technology"
+                                value={tech}
+                                onChange={(e) => {
+                                  const newProjects = [...projects];
+                                  newProjects[index].technologies[techIndex] = e.target.value;
+                                  setProjects(newProjects);
+                                }}
+                                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                  const newProjects = [...projects];
+                                  newProjects[index].technologies.splice(techIndex, 1);
+                                  setProjects(newProjects);
+                                }}
+                                className="transition-all duration-200 hover:bg-destructive hover:text-destructive-foreground"
+                              >
+                                <MinusCircle className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              const newProjects = [...projects];
+                              newProjects[index].technologies.push("");
+                              setProjects(newProjects);
+                            }}
+                            className="transition-all duration-200 hover:bg-primary hover:text-primary-foreground"
+                          >
+                            <PlusCircle className="w-4 h-4 mr-2" />
+                            Add Technology
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+
+            
             {/* Social Links */}
             <div className="space-y-6">
               <div className="flex items-center gap-2 pb-2 border-b">
@@ -424,6 +724,8 @@ export default function PortfolioForm() {
               Create Portfolio
             </Button>
           </form>
+
+          {/* <PortfolioPage/> */}
         </div>
       </div>
     </div>
